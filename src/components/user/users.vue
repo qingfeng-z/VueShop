@@ -42,7 +42,8 @@
                                    @click="removeUserById(scope.row.id)"></el-button>
                         <!--分配角色-->
                         <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
-                            <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+                            <el-button type="warning" icon="el-icon-setting" size="mini"
+                                       @click="setRoleDialogVisible(scope.row)"></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -106,6 +107,31 @@
                 <span slot="footer" class="dialog-footer">
     <el-button @click="editDialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="editUserInfo">确 定</el-button>
+  </span>
+            </el-dialog>
+
+            <el-dialog
+                    title="分配角色"
+                    :visible.sync="roleDialogVisible"
+                    width="30%"
+            @close="setRoleDialogClose">
+                <div>
+                    <p>当前用户: {{userInfo.username}}</p>
+                    <p>当前角色: {{userInfo.role_name}}</p>
+                    <p>分配新角色:
+                        <el-select v-model="roleId" placeholder="请选择">
+                            <el-option
+                                    v-for="item in roleList"
+                                    :key="item.id"
+                                    :label="item.roleName"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </p>
+                </div>
+                <span slot="footer" class="dialog-footer">
+    <el-button @click="roleDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
   </span>
             </el-dialog>
         </el-card>
@@ -175,7 +201,11 @@
                         {required: true, message: '请输入手机号码', trigger: 'blur'},
                         {validator: checkMobile, trigger: 'blur'}
                     ],
-                }
+                },
+                roleDialogVisible: false,
+                userInfo: {},
+                roleList: [],
+                roleId: ''
             }
         },
         created() {
@@ -255,10 +285,32 @@
 
                 if (confirmResult !== 'confirm') return this.$message.info('已取消删除')
                 const {data: res} = await this.$http.delete(`users/${id}`)
-                if(res.meta.status !== 200)  return this.$message.error(res.meta.msg)
+                if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
                 this.$message.success(res.meta.msg)
                 this.getUserList()
 
+            },
+            async setRoleDialogVisible(userInfo) {
+                this.userInfo = userInfo
+                // 获取所有角色列表
+                const {data: res} = await this.$http.get('roles')
+                if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+                this.roleList = res.data
+                console.log(this.roleList)
+                this.roleDialogVisible = true
+            },
+            async saveRoleInfo() {
+                if (!this.roleId) {
+                    return this.$message.error("请选择新角色")
+                }
+                const {data: res} = await this.$http.put(`users/${this.userInfo.id}/role`, {rid: this.roleId})
+                if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+                this.getUserList()
+                this.roleDialogVisible = false
+            },
+            setRoleDialogClose(){
+                this.roleId = ''
+                this.userInfo = {}
             }
         }
     }
