@@ -6,6 +6,8 @@
             <el-breadcrumb-item>商品分类</el-breadcrumb-item>
         </el-breadcrumb>
         <el-card>
+
+
             <el-row>
                 <el-col>
                     <el-button type="primary" @click="addCategoryDialogVisible">添加分类</el-button>
@@ -157,7 +159,6 @@
                 if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
                 this.categories = res.data.result
                 this.total = res.data.total
-                console.log(this.categories)
             },
             handleSizeChange(newSize) {
                 this.queryInfo.pagesize = newSize
